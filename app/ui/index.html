@@ -2,211 +2,121 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Agentic Scam Honeypot — Intelligence Dashboard</title>
+  <title>Agentic Scam Honeypot – Intelligence Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
     body {
-      margin: 0;
-      font-family: Segoe UI, sans-serif;
-      background-color: #0b1220;
+      font-family: Arial, sans-serif;
+      background: #0f172a;
       color: #e5e7eb;
+      margin: 0;
+      padding: 0;
     }
 
     header {
-      padding: 18px 24px;
+      background: #020617;
+      padding: 16px;
+      text-align: center;
       font-size: 22px;
       font-weight: bold;
-      background-color: #020617;
-      border-bottom: 1px solid #1e293b;
     }
 
     .container {
-      display: grid;
-      grid-template-columns: 1.3fr 1fr;
-      gap: 20px;
+      max-width: 900px;
+      margin: 30px auto;
       padding: 20px;
-    }
-
-    .card {
-      background-color: #020617;
-      border: 1px solid #1e293b;
-      border-radius: 12px;
-      padding: 18px;
     }
 
     textarea {
       width: 100%;
-      height: 90px;
-      background-color: #020617;
-      color: #e5e7eb;
-      border: 1px solid #334155;
-      border-radius: 8px;
+      height: 120px;
       padding: 12px;
-      font-size: 14px;
+      font-size: 15px;
+      border-radius: 8px;
+      border: none;
       resize: none;
     }
 
     button {
-      margin-top: 12px;
-      padding: 10px 18px;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 14px;
-    }
-
-    .btn-main {
-      background-color: #2563eb;
-      color: white;
-    }
-
-    .btn-main:hover {
-      background-color: #1d4ed8;
-    }
-
-    .btn-secondary {
-      background-color: #334155;
-      color: white;
-      margin-left: 10px;
-    }
-
-    .status {
-      margin-top: 14px;
-      font-weight: bold;
+      margin-top: 15px;
+      padding: 12px 20px;
       font-size: 15px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
     }
 
-    .high { color: #ef4444; }
-    .medium { color: #f59e0b; }
-    .low { color: #22c55e; }
-
-    .agent-box {
-      margin-top: 14px;
-      padding: 12px;
-      background-color: #020617;
-      border: 1px solid #334155;
-      border-radius: 8px;
-      min-height: 50px;
-      font-size: 14px;
+    button:hover {
+      background: #1d4ed8;
     }
 
     pre {
-      background-color: #020617;
-      border: 1px solid #334155;
+      background: #020617;
+      padding: 15px;
       border-radius: 8px;
-      padding: 12px;
-      font-size: 13px;
+      margin-top: 20px;
       overflow-x: auto;
+    }
+
+    .label {
+      margin-top: 20px;
+      font-weight: bold;
+      color: #93c5fd;
     }
   </style>
 </head>
 
 <body>
 
-<header>Agentic Scam Honeypot — Intelligence Dashboard</header>
+<header>
+  Agentic Scam Honeypot — Intelligence Dashboard
+</header>
 
 <div class="container">
 
-  <div class="card">
-    <h3>Incoming Message</h3>
+  <div class="label">Incoming Message</div>
+  <textarea id="message" placeholder="Paste scammer message here..."></textarea>
 
-    <textarea id="message" placeholder="Paste scammer message here..."></textarea>
+  <button onclick="sendMessage()">Engage Honeypot</button>
 
-    <button type="button" class="btn-main" onclick="sendMessage()">
-      Engage Honeypot
-    </button>
-
-    <button type="button" class="btn-secondary" onclick="startAutoDemo()">
-      Auto Scammer Demo
-    </button>
-
-    <div id="status" class="status"></div>
-
-    <h3>Agent Response</h3>
-    <div id="agentReply" class="agent-box">Waiting for message...</div>
-  </div>
-
-  <div class="card">
-    <h3>Extracted Intelligence</h3>
-    <pre id="extractedData">{ "upi_ids": [], "bank_accounts": [], "links": [] }</pre>
-
-    <h3>System JSON Output</h3>
-    <pre id="jsonOutput">{}</pre>
-  </div>
+  <div class="label">Agent Response / System Output</div>
+  <pre id="response">Waiting for input...</pre>
 
 </div>
 
 <script>
-  const sessionId = "session-1";
-  let autoDemoRunning = false;
+async function sendMessage() {
+  const message = document.getElementById("message").value;
+  const output = document.getElementById("response");
 
-  async function sendMessage(customText = null) {
-    const textarea = document.getElementById("message");
-    const text = customText || textarea.value.trim();
-    if (!text) return;
+  output.innerText = "Processing...";
 
-    textarea.value = "";
-
-    try {
-      const response = await fetch("http://127.0.0.1:8000/honeypot", {
+  try {
+    const res = await fetch(
+      "https://scam-honeypot-ai.onrender.com/honeypot",
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "x-api-key": "12345"
         },
         body: JSON.stringify({
-          text: text,
-          session_id: sessionId
+          text: message,
+          session_id: "ui-session"
         })
-      });
+      }
+    );
 
-      const data = await response.json();
+    const data = await res.json();
+    output.innerText = JSON.stringify(data, null, 2);
 
-      let cls = "low";
-      if (data.risk_level === "HIGH") cls = "high";
-      if (data.risk_level === "MEDIUM") cls = "medium";
-
-      document.getElementById("status").innerHTML =
-        `<span class="${cls}">
-          ${data.risk_level} RISK | Confidence: ${data.confidence}%
-        </span>`;
-
-      document.getElementById("agentReply").innerText =
-        data.agent_reply || "No response generated.";
-
-      document.getElementById("extractedData").textContent =
-        JSON.stringify(data.extracted_data || {}, null, 2);
-
-      document.getElementById("jsonOutput").textContent =
-        JSON.stringify(data, null, 2);
-
-    } catch (err) {
-      document.getElementById("agentReply").innerText =
-        "Backend error. Please check server.";
-    }
+  } catch (err) {
+    output.innerText = "Backend error. Please check server.";
   }
-
-  const demoMessages = [
-    "Your bank account has been blocked due to suspicious activity",
-    "Verify your account immediately to avoid suspension",
-    "You need to pay a verification charge",
-    "Send money to testupi123@upi immediately",
-    "If UPI fails, transfer to bank account 987654321012",
-    "Complete the payment using this link https://secure-bankverify.com"
-  ];
-
-  async function startAutoDemo() {
-    if (autoDemoRunning) return;
-    autoDemoRunning = true;
-
-    for (const msg of demoMessages) {
-      await sendMessage(msg);
-      await new Promise(r => setTimeout(r, 1200));
-    }
-
-    autoDemoRunning = false;
-  }
+}
 </script>
 
 </body>
