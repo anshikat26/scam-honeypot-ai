@@ -3,80 +3,113 @@
 <head>
   <meta charset="UTF-8" />
   <title>Agentic Scam Honeypot</title>
+
   <style>
     body {
       background: #0f172a;
       color: #e5e7eb;
       font-family: Arial, sans-serif;
-      padding: 40px;
+      padding: 30px;
     }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
     textarea {
       width: 100%;
-      height: 120px;
-      background: #020617;
-      color: #e5e7eb;
-      border: 1px solid #334155;
+      height: 100px;
       padding: 10px;
       border-radius: 6px;
+      border: none;
+      margin-bottom: 10px;
+      font-size: 14px;
     }
+
     button {
-      margin-top: 12px;
-      padding: 10px 20px;
+      padding: 10px 18px;
       background: #2563eb;
       color: white;
       border: none;
       border-radius: 6px;
       cursor: pointer;
     }
-    pre {
-      margin-top: 20px;
+
+    .box {
       background: #020617;
-      padding: 16px;
-      border-radius: 6px;
       border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 12px;
+      margin-top: 15px;
       white-space: pre-wrap;
+    }
+
+    .title {
+      margin-top: 25px;
+      font-weight: bold;
+      color: #93c5fd;
     }
   </style>
 </head>
+
 <body>
 
-  <h1>🕵️ Agentic Scam Honeypot</h1>
+<h1>Agentic Scam Honeypot</h1>
 
-  <textarea id="message" placeholder="Paste scammer message here..."></textarea>
-  <br />
-  <button onclick="send()">Engage Honeypot</button>
+<textarea id="message" placeholder="Paste scammer message here..."></textarea>
+<button onclick="send()">Engage Honeypot</button>
 
-  <pre id="output">Waiting for response…</pre>
+<div class="title">Agent Reply</div>
+<div id="agentReply" class="box">Waiting...</div>
 
-  <script>
-    async function send() {
-      const text = document.getElementById("message").value;
+<div class="title">Extracted Intelligence</div>
+<div id="intel" class="box">No data yet</div>
 
-      document.getElementById("output").innerText = "Processing…";
+<div class="title">Full System JSON</div>
+<div id="json" class="box">—</div>
 
-      try {
-        const res = await fetch("/honeypot", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-api-key": "12345"
-          },
-          body: JSON.stringify({
-            text: text,
-            session_id: "judge-demo"
-          })
-        });
+<script>
+async function send() {
+  const text = document.getElementById("message").value;
 
-        const data = await res.json();
-        document.getElementById("output").innerText =
-          JSON.stringify(data, null, 2);
+  document.getElementById("agentReply").innerText = "Thinking...";
+  document.getElementById("intel").innerText = "Processing...";
+  document.getElementById("json").innerText = "Loading...";
 
-      } catch (err) {
-        document.getElementById("output").innerText =
-          "❌ Backend not reachable";
-      }
-    }
-  </script>
+  try {
+    const res = await fetch("/honeypot", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": "12345"
+      },
+      body: JSON.stringify({
+        text: text,
+        session_id: "ui-session"
+      })
+    });
+
+    const data = await res.json();
+
+    // 1. Agent reply ONLY
+    document.getElementById("agentReply").innerText =
+      data.agent_reply || "No reply";
+
+    // 2. Extracted intelligence ONLY
+    document.getElementById("intel").innerText =
+      JSON.stringify(data.extracted_data, null, 2);
+
+    // 3. Full JSON (for judges/debug)
+    document.getElementById("json").innerText =
+      JSON.stringify(data, null, 2);
+
+  } catch (err) {
+    document.getElementById("agentReply").innerText = "Backend error";
+    document.getElementById("intel").innerText = "-";
+    document.getElementById("json").innerText = "-";
+  }
+}
+</script>
 
 </body>
 </html>
