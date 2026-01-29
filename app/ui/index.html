@@ -2,122 +2,81 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Agentic Scam Honeypot – Intelligence Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
+  <title>Agentic Scam Honeypot</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
       background: #0f172a;
       color: #e5e7eb;
-      margin: 0;
-      padding: 0;
+      font-family: Arial, sans-serif;
+      padding: 40px;
     }
-
-    header {
-      background: #020617;
-      padding: 16px;
-      text-align: center;
-      font-size: 22px;
-      font-weight: bold;
-    }
-
-    .container {
-      max-width: 900px;
-      margin: 30px auto;
-      padding: 20px;
-    }
-
     textarea {
       width: 100%;
       height: 120px;
-      padding: 12px;
-      font-size: 15px;
-      border-radius: 8px;
-      border: none;
-      resize: none;
+      background: #020617;
+      color: #e5e7eb;
+      border: 1px solid #334155;
+      padding: 10px;
+      border-radius: 6px;
     }
-
     button {
-      margin-top: 15px;
-      padding: 12px 20px;
-      font-size: 15px;
+      margin-top: 12px;
+      padding: 10px 20px;
       background: #2563eb;
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 6px;
       cursor: pointer;
     }
-
-    button:hover {
-      background: #1d4ed8;
-    }
-
     pre {
+      margin-top: 20px;
       background: #020617;
-      padding: 15px;
-      border-radius: 8px;
-      margin-top: 20px;
-      overflow-x: auto;
-    }
-
-    .label {
-      margin-top: 20px;
-      font-weight: bold;
-      color: #93c5fd;
+      padding: 16px;
+      border-radius: 6px;
+      border: 1px solid #334155;
+      white-space: pre-wrap;
     }
   </style>
 </head>
-
 <body>
 
-<header>
-  Agentic Scam Honeypot — Intelligence Dashboard
-</header>
+  <h1>🕵️ Agentic Scam Honeypot</h1>
 
-<div class="container">
-
-  <div class="label">Incoming Message</div>
   <textarea id="message" placeholder="Paste scammer message here..."></textarea>
+  <br />
+  <button onclick="send()">Engage Honeypot</button>
 
-  <button onclick="sendMessage()">Engage Honeypot</button>
+  <pre id="output">Waiting for response…</pre>
 
-  <div class="label">Agent Response / System Output</div>
-  <pre id="response">Waiting for input...</pre>
+  <script>
+    async function send() {
+      const text = document.getElementById("message").value;
 
-</div>
+      document.getElementById("output").innerText = "Processing…";
 
-<script>
-async function sendMessage() {
-  const message = document.getElementById("message").value;
-  const output = document.getElementById("response");
+      try {
+        const res = await fetch("/honeypot", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": "12345"
+          },
+          body: JSON.stringify({
+            text: text,
+            session_id: "judge-demo"
+          })
+        });
 
-  output.innerText = "Processing...";
+        const data = await res.json();
+        document.getElementById("output").innerText =
+          JSON.stringify(data, null, 2);
 
-  try {
-    const res = await fetch(
-      "https://scam-honeypot-ai.onrender.com/honeypot",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": "12345"
-        },
-        body: JSON.stringify({
-          text: message,
-          session_id: "ui-session"
-        })
+      } catch (err) {
+        document.getElementById("output").innerText =
+          "❌ Backend not reachable";
       }
-    );
-
-    const data = await res.json();
-    output.innerText = JSON.stringify(data, null, 2);
-
-  } catch (err) {
-    output.innerText = "Backend error. Please check server.";
-  }
-}
-</script>
+    }
+  </script>
 
 </body>
 </html>
