@@ -24,7 +24,7 @@ app.add_middleware(
 # --------------------
 # UI SERVING
 # --------------------
-BASE_DIR = os.path.dirname(os.path.abspath(_file_))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 @app.get("/")
 def serve_ui():
@@ -36,3 +36,4 @@ def serve_ui():
 # API ROUTES
 # --------------------
 app.include_router(router)
+
