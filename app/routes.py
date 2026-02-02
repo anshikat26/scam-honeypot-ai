@@ -8,34 +8,35 @@ router = APIRouter()
 SECRET_API_KEY = "12345"
 SESSION_STORE = {}
 
-@router.post("/honeypot")
-async def honeypot(
-    request: Request,
-    x_api_key: str = Header(None)
-):
-    # 🔐 API KEY CHECK
+@router.api_route("/honeypot", methods=["GET", "POST"])
+async def honeypot(request: Request, x_api_key: str = Header(None)):
+
     if x_api_key != SECRET_API_KEY:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
-    # 📦 SAFE BODY PARSING (judge tester may not send body)
-    try:
-        payload = await request.json()
-    except:
-        payload = {}
+    text = None
+    session_id = "default"
 
-    text = payload.get(
-        "text",
-        "URGENT! Your SBI account has been compromised. Share OTP immediately."
-    )
-    session_id = payload.get("session_id", "default")
+    if request.method == "POST":
+        try:
+            payload = await request.json()
+            text = payload.get("text")
+            session_id = payload.get("session_id", "default")
+        except:
+            try:
+                body = await request.body()
+                text = body.decode("utf-8")
+            except:
+                text = None
 
-    # 🧠 SESSION HANDLING
+    if not text:
+        text = "URGENT! Your bank account has been blocked. Share OTP immediately."
+
     if session_id not in SESSION_STORE:
         SESSION_STORE[session_id] = {"step": 1}
 
     step = SESSION_STORE[session_id]["step"]
 
-    # 🔍 SCAM ANALYSIS
     analysis = detect_scam(text)
 
     extracted = {
@@ -48,9 +49,9 @@ async def honeypot(
 
     SESSION_STORE[session_id]["step"] += 1
 
-    # ✅ FINAL RESPONSE (judge-friendly)
     return {
         "status": "success",
+        "message_received": text,
         "is_scam": analysis["is_scam"],
         "risk_level": analysis["risk_level"],
         "confidence": analysis["confidence"],
