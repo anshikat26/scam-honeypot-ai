@@ -10,9 +10,6 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# --------------------
-# CORS (IMPORTANT)
-# --------------------
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -21,19 +18,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --------------------
-# UI SERVING
-# --------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 @app.get("/")
 def serve_ui():
-    return FileResponse(
-        os.path.join(BASE_DIR, "ui", "index.html")
-    )
+    return FileResponse(os.path.join(BASE_DIR, "ui", "index.html"))
 
-# --------------------
-# API ROUTES
-# --------------------
 app.include_router(router)
-
