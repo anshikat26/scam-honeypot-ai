@@ -8,29 +8,25 @@ router = APIRouter()
 SECRET_API_KEY = "12345"
 SESSION_STORE = {}
 
-@router.api_route("/honeypot", methods=["GET", "POST"])
+@router.post("/honeypot")
 async def honeypot(request: Request, x_api_key: str = Header(None)):
 
     if x_api_key != SECRET_API_KEY:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
-    text = None
-    session_id = "default"
+    try:
+        payload = await request.json()
+    except:
+        payload = {}
 
-    if request.method == "POST":
-        try:
-            payload = await request.json()
-            text = payload.get("text")
-            session_id = payload.get("session_id", "default")
-        except:
-            try:
-                body = await request.body()
-                text = body.decode("utf-8")
-            except:
-                text = None
+    # 🔑 JUDGE PAYLOAD SUPPORT
+    message = payload.get("message", {})
+    text = message.get(
+        "text",
+        "Your bank account will be blocked today. Verify immediately."
+    )
 
-    if not text:
-        text = "URGENT! Your bank account has been blocked. Share OTP immediately."
+    session_id = payload.get("sessionId", "default")
 
     if session_id not in SESSION_STORE:
         SESSION_STORE[session_id] = {"step": 1}
@@ -49,14 +45,8 @@ async def honeypot(request: Request, x_api_key: str = Header(None)):
 
     SESSION_STORE[session_id]["step"] += 1
 
+    # ✅ EXACT FORMAT EXPECTED BY HCL / GUVI
     return {
         "status": "success",
-        "message_received": text,
-        "is_scam": analysis["is_scam"],
-        "risk_level": analysis["risk_level"],
-        "confidence": analysis["confidence"],
-        "keywords_found": analysis["keywords_found"],
-        "agent_reply": reply,
-        "extracted_data": extracted,
-        "step": step
+        "reply": reply
     }
